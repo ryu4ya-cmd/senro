@@ -146,10 +146,14 @@ svg{display:block}
 .animalsRow svg{width:clamp(56px,11vmin,110px);height:auto;overflow:visible}
 
 /* ---------- misc ---------- */
-#hand{position:fixed;left:0;top:0;width:clamp(56px,9vmin,80px);pointer-events:none;z-index:40;display:none;transform-origin:50% 0}
+#hand{position:fixed;left:0;top:0;width:clamp(60px,9vmin,84px);pointer-events:none;z-index:40;display:none;transform-origin:47% 2.5%}
 #hand.on{display:block}
-#hand svg{width:100%;height:auto;animation:bob .8s ease-in-out infinite}
-@keyframes bob{50%{transform:translateY(14px)}}
+#hand svg{width:100%;height:auto;transform-origin:47% 2.5%;animation:tap 1.2s ease-in-out infinite}
+/* ゆびで「トン」と おす うごき */
+@keyframes tap{0%,100%{transform:translate(0,26px)}45%{transform:translate(0,0)}52%{transform:translate(0,0) scale(.93)}62%{transform:translate(0,3px)}}
+#ripple{position:fixed;left:0;top:0;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;border:5px solid #ffc83d;pointer-events:none;z-index:39;display:none;animation:ripple 1.2s ease-out infinite}
+#ripple.on{display:block}
+@keyframes ripple{0%,46%{transform:scale(.15);opacity:0}52%{transform:scale(.25);opacity:1}100%{transform:scale(1.25);opacity:0}}
 #dragGhost{position:fixed;left:0;top:0;width:clamp(72px,14vmin,120px);height:clamp(72px,14vmin,120px);pointer-events:none;z-index:45;display:none;opacity:.88;transform:translate(-50%,-50%) scale(1.1);
   border-radius:18px;overflow:hidden;box-shadow:0 10px 24px rgba(0,0,0,.25);border:5px solid var(--sel)}
 #dragGhost svg{width:100%;height:100%}
@@ -222,6 +226,7 @@ svg{display:block}
     <button id="btnTop" class="cbtn next"></button>
   </section>
 
+  <div id="ripple"></div>
   <div id="hand"></div>
   <div id="dragGhost"></div>
   <div id="confetti"></div>
@@ -531,9 +536,14 @@ const ICON = {
   next:`<svg viewBox="0 0 64 64"><path d="M10 32 H46" stroke="#fff" stroke-width="9" stroke-linecap="round"/><path d="M34 14 L56 32 L34 50Z" fill="#fff" stroke="#fff" stroke-width="5" stroke-linejoin="round"/></svg>`,
   play:`<svg viewBox="0 0 64 64"><path d="M18 8 L56 32 L18 56Z" fill="#fff" stroke="#fff" stroke-width="6" stroke-linejoin="round"/></svg>`,
   star:`<svg viewBox="0 0 64 64"><path d="M32 4 L40 23 L60 24 L44 37 L50 58 L32 46 L14 58 L20 37 L4 24 L24 23Z" fill="#ffd23f" stroke="#f2a922" stroke-width="3" stroke-linejoin="round"/></svg>`,
-  hand:`<svg viewBox="0 0 60 84" xmlns="http://www.w3.org/2000/svg"><g fill="#ffe2c6" stroke="#c98a5a" stroke-width="3" stroke-linejoin="round">
-    <rect x="22" y="2" width="16" height="48" rx="8"/><path d="M8 44 q0 -9 8 -9 h4 v10 h-1 m19 -10 h4 q8 0 8 4 v4 q8 0 8 6 v14 q0 22 -24 22 h-4 q-22 0 -22 -22z"/>
-    <path d="M38 36 v8 M46 39 v7" fill="none"/></g><circle cx="30" cy="8" r="0" fill="none"/></svg>`
+  hand:`<svg viewBox="0 0 64 92" xmlns="http://www.w3.org/2000/svg"><g stroke="#b9794c" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="15" y="76" width="36" height="14" rx="5" fill="#8ec9ff" stroke="#5b9fdc"/>
+    <path d="M16 52 q-11 -4 -11 5 q0 6 9 13 l6 5" fill="#ffe2c6"/>
+    <path d="M17 44 h31 q10 0 10 10 v10 q0 14 -14 14 h-17 q-13 0 -13 -13 v-12 q0 -9 3 -9z" fill="#ffe2c6"/>
+    <rect x="47" y="45" width="12" height="17" rx="6" fill="#ffe2c6"/><rect x="36" y="41" width="13" height="18" rx="6.5" fill="#ffe2c6"/>
+    <rect x="22" y="2" width="16" height="54" rx="8" fill="#ffe2c6"/>
+    <path d="M25.5 9 q4.5 -4 9 0" fill="none" stroke="#e9b897" stroke-width="2"/></g>
+    <circle cx="44" cy="68" r="3.4" fill="#ffc2b0" stroke="none"/></svg>`
 };
 
 /* =========================================================
@@ -576,12 +586,124 @@ const sfx = {
   arrive(){ [523,659,784,1046].forEach((f,i) => tone(f,.26,{type:'triangle',vol:.15,delay:i*.11})); [523,659,784].forEach(f => tone(f,1,{vol:.07,delay:.5})); },
   fanfare(){ [523,523,659,784,659,784,1046].forEach((f,i) => tone(f,.22,{type:'triangle',vol:.14,delay:i*.14})); }
 };
-function pickVoice(){ try { const vs = speechSynthesis.getVoices(); jaVoice = vs.find(v => /^ja/i.test(v.lang)) || null; } catch(e) {} }
-if ('speechSynthesis' in window){ pickVoice(); try { speechSynthesis.onvoiceschanged = pickVoice; } catch(e) {} }
-function speak(text){
-  if (state.muted || !state.audioOn || !('speechSynthesis' in window)) return;
-  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'ja-JP'; if (jaVoice) u.voice = jaVoice; u.rate = 1; u.pitch = 1.25; speechSynthesis.speak(u); } catch(e) {}
+// こえ: GitHub Pages では voice/ の mp3（小春音アミ。ふみきり カンカン・もじもじの もり の声）を つかい、
+// その声が ない セリフや、声の ファイルが ない ところ（claude.ai）では 端末の 読み上げ を つかう
+const LINES = /*VOICE-LINES*/{
+  "tsunagete": "線路を、つなげてね！",
+  "loopstart": "ぐるっと一周、つなげてね！",
+  "connected": "つながったね！ 出発を、押してね！",
+  "choose": "下の線路を、えらんでね。",
+  "retry": "もう一回、やってみよう！",
+  "pressgo": "出発を、押してね！",
+  "remove": "ここの線路を、さわって取ってみよう。",
+  "here": "ここだよ！",
+  "shape": "この形を、置いてね。",
+  "go": "しゅっぱつ、しんこう！",
+  "stopped": "あれれ、止まっちゃった。ここを、つないでみよう！",
+  "clear": "できたね！ すごい！",
+  "loopclear": "一周できたね！ すごい！",
+  "allclear": "全部できたね！ おめでとう！"
+}/*END-VOICE-LINES*/;
+const VOICE = { buf:{}, srcs:[], tried:false };
+function loadVoices(){
+  if (VOICE.tried || !AC || !window.fetch || location.protocol === 'file:') return;
+  VOICE.tried = true;
+  fetch('voice/index.json').then(r => r.ok ? r.json() : null).then(m => {
+    if (!m || !m.clips) return;
+    Object.keys(m.clips).forEach(k => {
+      const files = [].concat(m.clips[k]), bufs = [];
+      files.forEach((fn, i) => {
+        fetch('voice/' + fn).then(r => r.arrayBuffer()).then(ab => {
+          try { AC.decodeAudioData(ab, b => { bufs[i] = b; if (files.every((_, j) => bufs[j])) VOICE.buf[k] = bufs; }, () => {}); } catch(e) {}
+        }).catch(() => {});
+      });
+    });
+  }).catch(() => {});
 }
+function pickVoice(){
+  try {
+    const vs = speechSynthesis.getVoices().filter(v => /^ja/i.test(v.lang));
+    const pref = [/Google/, /Kyoko|O-?ren|Otoya/i, /Nanami|Ayumi|Haruka|Sayaka/i];
+    jaVoice = null;
+    for (const re of pref){ jaVoice = vs.find(v => re.test(v.name)); if (jaVoice) break; }
+    if (!jaVoice) jaVoice = vs[0] || null;
+  } catch(e) {}
+}
+if ('speechSynthesis' in window){ pickVoice(); try { speechSynthesis.onvoiceschanged = pickVoice; } catch(e) {} }
+function stopVoice(){
+  VOICE.srcs.forEach(s => { try { s.stop(); } catch(e) {} }); VOICE.srcs = [];
+  try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch(e) {}
+}
+function speak(id){
+  if (state.muted || !state.audioOn) return;
+  stopVoice();
+  const bufs = VOICE.buf[id];
+  if (bufs && AC){
+    try {
+      // いくつかの こえを つづけて ながす
+      let t = AC.currentTime + .02, last = null;
+      bufs.forEach(b => { const src = AC.createBufferSource(); src.buffer = b; src.connect(AC.destination); src.start(t); t += b.duration + .08; last = src; VOICE.srcs.push(src); });
+      bgmDuck(t - AC.currentTime + .3); return;
+    } catch(e) {}
+  }
+  if (!('speechSynthesis' in window)) return;
+  try {
+    const u = new SpeechSynthesisUtterance(LINES[id] || id); u.lang = 'ja-JP'; if (jaVoice) u.voice = jaVoice;
+    u.rate = 1.05; u.pitch = 1.15; speechSynthesis.speak(u); bgmDuck(2.4);
+  } catch(e) {}
+}
+
+// BGM: その場で つくる オルゴールふうの きょく（8しょうせつを くりかえす）
+const BGM = { on:false, timer:0, t0:0, i:0, gain:null, events:null };
+const BPM = 100, SPB = 60 / BPM, LOOP = 32;
+(function(){
+  const mel = [[72,1],[76,1],[79,1],[76,1],[77,1],[81,1],[79,2],[76,1],[79,1],[84,1],[79,1],[81,1],[79,.5],[77,.5],[76,2],
+               [74,1],[77,1],[81,1],[77,1],[79,1],[77,.5],[76,.5],[74,2],[76,1],[79,1],[77,1],[74,1],[72,3],[0,1]];
+  const roots = [48,53,48,53,50,43,48,48], ev = [];
+  let b = 0; mel.forEach(n => { if (n[0]) ev.push({ b, m:n[0], d:n[1], kind:'mel' }); b += n[1]; });
+  roots.forEach((r,i) => { ev.push({ b:i*4, m:r, d:1.6, kind:'bass' }); ev.push({ b:i*4+2, m:r+7, d:1.6, kind:'bass' }); });
+  ev.sort((a,c) => a.b - c.b); BGM.events = ev;
+})();
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+function bgmNote(e, t){
+  const f = mtof(e.m), d = e.d * SPB;
+  const parts = e.kind === 'mel' ? [[1,'sine',.07],[2,'sine',.018]] : [[1,'triangle',.06]];
+  parts.forEach(p => {
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = p[1]; o.frequency.value = f * p[0];
+    const len = e.kind === 'mel' ? Math.min(d + .4, 1.2) : d;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(p[2], t + .015); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    o.connect(g); g.connect(BGM.gain); o.start(t); o.stop(t + len + .05);
+  });
+}
+function bgmTick(){
+  if (!BGM.on || !AC) return;
+  const ahead = AC.currentTime + .5;
+  for (let guard = 0; guard < 64; guard++){
+    const e = BGM.events[BGM.i], t = BGM.t0 + e.b * SPB;
+    if (t > ahead) break;
+    if (t > AC.currentTime - .05) bgmNote(e, t);
+    BGM.i++;
+    if (BGM.i >= BGM.events.length){ BGM.i = 0; BGM.t0 += LOOP * SPB; }
+  }
+}
+function bgmStart(){
+  if (BGM.on || state.muted || !AC || document.hidden) return;
+  try {
+    if (!BGM.gain){ BGM.gain = AC.createGain(); BGM.gain.gain.value = 1; BGM.gain.connect(AC.destination); }
+    BGM.on = true; BGM.i = 0; BGM.t0 = AC.currentTime + .15;
+    BGM.timer = setInterval(bgmTick, 120); bgmTick();
+  } catch(e) { BGM.on = false; }
+}
+function bgmStop(){
+  BGM.on = false; clearInterval(BGM.timer);
+  if (BGM.gain && AC){ try { const g = BGM.gain; g.gain.setValueAtTime(g.gain.value, AC.currentTime); g.gain.linearRampToValueAtTime(0.0001, AC.currentTime + .15); setTimeout(() => { g.disconnect(); }, 300); } catch(e) {} BGM.gain = null; }
+}
+function bgmDuck(sec){
+  if (!BGM.gain || !AC) return;
+  try { const g = BGM.gain.gain, t = AC.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(.3, t + .1); g.setValueAtTime(.3, t + sec); g.linearRampToValueAtTime(1, t + sec + .6); } catch(e) {}
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) bgmStop(); else if (state.audioOn) bgmStart(); });
 
 /* =========================================================
    じょうたい
@@ -627,7 +749,7 @@ function startStage(i){
   show('game');
   renderAll();
   const msg = cur().loop ? 'ぐるっと いっしゅう つなげてね' : 'せんろを つなげてね';
-  speak(msg); showBubble(msg, ICON.hand, 2800);
+  speak(cur().loop ? 'loopstart' : 'tsunagete'); showBubble(msg, ICON.hand, 2800);
 }
 
 function renderAll(){ renderBoard(); renderTray(); renderHUD(); renderHL(); placeTrainIdle(); updateButtons(); updateGuide(); }
@@ -729,7 +851,7 @@ function afterChange(){
   if (state.trainStopped){ state.trainStopped = false; placeTrainIdle(); }
   renderBoard(); renderTray(); renderHL();
   const ok = updateButtons();
-  if (ok && !state.wasComplete){ sfx.connect(); speak('つながったね！ しゅっぱつ を おしてね'); }
+  if (ok && !state.wasComplete){ sfx.connect(); speak('connected'); }
   state.wasComplete = ok;
   updateGuide();
 }
@@ -748,7 +870,7 @@ function tapCell(r, c){
   if (base.kind === 'empty'){
     if (state.placed[k]){ pushHist(); delete state.placed[k]; sfx.remove(); afterChange(); return; }
     if (!state.selected){
-      sfx.boop(); nudgeTray(); showBubble('したの せんろを えらんでね', ICON.hand, 2200); speak('したの せんろを えらんでね'); return;
+      sfx.boop(); nudgeTray(); showBubble('したの せんろを えらんでね', ICON.hand, 2200); speak('choose'); return;
     }
     placeAt(k, state.selected);
   } else {
@@ -767,7 +889,7 @@ function resetBoard(){
   if (locked()) return;
   if (!Object.keys(state.placed).length){ sfx.boop(); return; }
   pushHist(); state.placed = {}; state.selected = null; sfx.remove(); afterChange();
-  speak('もういちど やってみよう');
+  speak('retry');
 }
 function hintTarget(){
   const st = cur(), full = trace(st, st.sol);
@@ -781,16 +903,16 @@ function hint(){
   if (locked()) return;
   state.breakKey = null;
   if (trace(cur(), state.placed).ok){
-    state.hint = { go:true }; renderHL(); sfx.soft(); speak('しゅっぱつ を おしてね'); showBubble('しゅっぱつ を おしてね', ICON.hint, 2400); return;
+    state.hint = { go:true }; renderHL(); sfx.soft(); speak('pressgo'); showBubble('しゅっぱつ を おしてね', ICON.hint, 2400); return;
   }
   const t = hintTarget();
   if (!t) return;
   const level = (state.hint && state.hint.key === t.key) ? 2 : 1;
   state.hint = { ...t, level };
   sfx.soft();
-  if (t.wrong){ speak('ここの せんろを タッチして とってみよう'); showBubble('ここを タッチして とってみよう', ICON.hint, 2600); }
-  else if (level === 1){ speak('ここだよ'); showBubble('ここだよ', ICON.hint, 2000); }
-  else { speak('この かたちを おいてね'); showBubble('この かたちを おいてね', ICON.hint, 2400); }
+  if (t.wrong){ speak('remove'); showBubble('ここを タッチして とってみよう', ICON.hint, 2600); }
+  else if (level === 1){ speak('here'); showBubble('ここだよ', ICON.hint, 2000); }
+  else { speak('shape'); showBubble('この かたちを おいてね', ICON.hint, 2400); }
   renderHL(); renderTray();
 }
 function go(){
@@ -804,7 +926,7 @@ function go(){
   // つながって いなければ、きれめの てまえ で とまる
   const end = t.ok ? path.L : Math.max(S0, path.L - 32);
   const dist = end - S0, T = dist < 1 ? 0.6 : dist/(st.loop ? 145 : 120) + 1.0;
-  sfx.whistle(); setTimeout(() => { if (token === state.runToken) speak('しゅっぱつ！'); }, 350);
+  sfx.whistle(); setTimeout(() => { if (token === state.runToken) speak('go'); }, 350);
   let t0 = null, lastChug = 0;
   function frame(ts){
     if (token !== state.runToken) return;
@@ -827,14 +949,14 @@ function stopAtBreak(token, t){
   const car = document.getElementById('car0');
   if (car){ car.classList.remove('shake'); void car.getBBox; car.firstElementChild.classList.add('shake'); setTimeout(() => car.firstElementChild && car.firstElementChild.classList.remove('shake'), 400); }
   renderHL(); updateButtons(); updateGuide();
-  setTimeout(() => { if (token !== state.runToken) return; sfx.soft(); speak('あれれ、とまっちゃった。ここを つないでみよう'); showBubble('ここを つないでみよう', ICON.hint, 3200); }, 450);
+  setTimeout(() => { if (token !== state.runToken) return; sfx.soft(); speak('stopped'); showBubble('ここを つないでみよう', ICON.hint, 3200); }, 450);
 }
 function arrive(token){
   if (token !== state.runToken) return;
   state.running = false; state.done = true;
   state.cleared.add(state.stage); store.set('cleared', [...state.cleared]);
   updateButtons(); renderHUD(); updateGuide();
-  sfx.arrive(); speak(cur().loop ? 'いっしゅう できたね！' : 'できたね！');
+  sfx.arrive(); speak(cur().loop ? 'loopclear' : 'clear'); bgmDuck(2.5);
   $('#board').classList.add('cheer');
   sparkles();
   confetti(70);
@@ -880,7 +1002,7 @@ function finale(){
   $('#final .animalsRow').innerHTML = ['rabbit','bear','chick','cat','panda'].map((k,i) => animalCard(k, i*.09)).join('');
   $('#final .parade').innerHTML = trainSide('hankyu').replace('<svg', '<svg style="animation-delay:0s"') + trainSide('yamanote').replace('<svg', '<svg style="animation-delay:-3.5s"');
   $('#btnTop').innerHTML = ICON.home.replace(/#ff8a5c/g,'#fff').replace(/#ffd9c4/g,'#bdf0c9') + 'はじめから';
-  sfx.fanfare(); speak('ぜんぶ できたね！ おめでとう！');
+  sfx.fanfare(); speak('allclear'); bgmDuck(3);
   confetti(110); setTimeout(() => { if (state.screen === 'final') confetti(80); }, 1800);
 }
 
@@ -906,15 +1028,17 @@ function updateGuide(){
   let pos = null;
   if (target){ const b = target.getBoundingClientRect(); pos = [b.left + b.width/2, b.top + b.height/2]; }
   else if (cell) pos = cellScreenCenter(cell);
-  if (!pos){ hand.classList.remove('on'); return; }
-  hand.innerHTML = ICON.hand;
-  hand.classList.add('on');
-  const w = hand.offsetWidth, h = w * 84/60;
-  const flip = pos[1] + h + 20 > innerHeight;
-  hand.style.transform = flip ? 'rotate(180deg)' : 'none';
-  hand.style.left = (pos[0] - w/2) + 'px';
-  hand.style.top = (flip ? pos[1] - 4 : pos[1] + 4) + 'px';
-  hand.style.transformOrigin = '50% 0';
+  const ripple = $('#ripple');
+  if (!pos){ hand.classList.remove('on'); ripple.classList.remove('on'); return; }
+  if (!hand.firstChild) hand.innerHTML = ICON.hand;
+  hand.classList.add('on'); ripple.classList.add('on');
+  // ゆびさきを めあての まんなかに あわせる。下の ほうの ものは 上から さす
+  const w = hand.offsetWidth, h = w * 92/64;
+  const fromTop = pos[1] > innerHeight * 0.62;
+  hand.style.transform = fromTop ? 'rotate(200deg)' : 'rotate(-18deg)';
+  hand.style.left = (pos[0] - w*0.47) + 'px';
+  hand.style.top = (pos[1] - h*0.025) + 'px';
+  ripple.style.left = pos[0] + 'px'; ripple.style.top = pos[1] + 'px';
 }
 
 /* =========================================================
@@ -936,7 +1060,7 @@ function onPtr(target, kind, fn){
   const mt = { down:'mousedown', move:'mousemove', up:'mouseup' }[kind];
   if (mt) target.addEventListener(mt, e => { if (Date.now() - lastTouch < 800) return; fn({ x:e.clientX, y:e.clientY, id:'mouse', target:e.target, ev:e }); });
 }
-const unlockOnce = () => { unlockAudio(); state.audioOn = true; };
+const unlockOnce = () => { unlockAudio(); state.audioOn = true; loadVoices(); bgmStart(); };
 ['pointerdown','touchstart','touchend','mousedown'].forEach(ev => document.addEventListener(ev, unlockOnce, true));
 ['contextmenu','selectstart','dragstart','gesturestart'].forEach(ev => document.addEventListener(ev, e => e.preventDefault()));
 document.addEventListener('touchmove', e => e.preventDefault(), { passive:false });
@@ -992,11 +1116,11 @@ $('#btnReset').addEventListener('click', resetBoard);
 $('#btnHint').addEventListener('click', hint);
 $('#btnAgain').addEventListener('click', () => startStage(state.stage));
 $('#btnNext').addEventListener('click', () => { if (state.stage < STAGES.length - 1) startStage(state.stage + 1); else finale(); });
-$('#btnHome').addEventListener('click', () => { state.runToken++; state.running = false; $('#clear').classList.remove('on'); try { speechSynthesis.cancel(); } catch(e) {} show('title'); });
+$('#btnHome').addEventListener('click', () => { state.runToken++; state.running = false; $('#clear').classList.remove('on'); stopVoice(); show('title'); });
 $('#btnTop').addEventListener('click', () => show('title'));
 $('#btnSound').addEventListener('click', () => {
   state.muted = !state.muted; store.set('muted', state.muted);
-  if (state.muted){ try { speechSynthesis.cancel(); } catch(e) {} } else sfx.select();
+  if (state.muted){ stopVoice(); bgmStop(); } else { sfx.select(); bgmStart(); }
   renderHUD();
 });
 $('#btnTrain').addEventListener('click', () => {
@@ -1021,7 +1145,7 @@ renderTitle();
 show('title');
 
 // テストよう
-window.__senro = { STAGES, PIECES, trace, buildPath, breakKey, state, startStage, tapCell, selectPiece, go, undo, resetBoard, hint, hintTarget, cellScreenCenter };
+window.__senro = { BGM, VOICE, STAGES, PIECES, trace, buildPath, breakKey, state, startStage, tapCell, selectPiece, go, undo, resetBoard, hint, hintTarget, cellScreenCenter };
 })();
 </script>
 </body>

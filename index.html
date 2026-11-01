@@ -153,10 +153,14 @@ svg{display:block}
 .animalsRow svg{width:88px;width:clamp(56px,11vmin,110px);height:auto;overflow:visible}
 
 /* ---------- misc ---------- */
-#hand{position:fixed;left:0;top:0;width:72px;width:clamp(56px,9vmin,80px);pointer-events:none;z-index:40;display:none;transform-origin:50% 0}
+#hand{position:fixed;left:0;top:0;width:72px;width:clamp(60px,9vmin,84px);pointer-events:none;z-index:40;display:none;transform-origin:47% 2.5%}
 #hand.on{display:block}
-#hand svg{width:100%;height:auto;animation:bob .8s ease-in-out infinite}
-@keyframes bob{50%{transform:translateY(14px)}}
+#hand svg{width:100%;height:auto;transform-origin:47% 2.5%;animation:tap 1.2s ease-in-out infinite}
+/* ゆびで「トン」と おす うごき */
+@keyframes tap{0%,100%{transform:translate(0,26px)}45%{transform:translate(0,0)}52%{transform:translate(0,0) scale(.93)}62%{transform:translate(0,3px)}}
+#ripple{position:fixed;left:0;top:0;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;border:5px solid #ffc83d;pointer-events:none;z-index:39;display:none;animation:ripple 1.2s ease-out infinite}
+#ripple.on{display:block}
+@keyframes ripple{0%,46%{transform:scale(.15);opacity:0}52%{transform:scale(.25);opacity:1}100%{transform:scale(1.25);opacity:0}}
 #dragGhost{position:fixed;left:0;top:0;width:112px;width:clamp(72px,14vmin,120px);height:112px;height:clamp(72px,14vmin,120px);pointer-events:none;z-index:45;display:none;opacity:.88;transform:translate(-50%,-50%) scale(1.1);
   border-radius:18px;overflow:hidden;box-shadow:0 10px 24px rgba(0,0,0,.25);border:5px solid var(--sel)}
 #dragGhost svg{width:100%;height:100%}
@@ -229,6 +233,7 @@ svg{display:block}
     <button id="btnTop" class="cbtn next"></button>
   </section>
 
+  <div id="ripple"></div>
   <div id="hand"></div>
   <div id="dragGhost"></div>
   <div id="confetti"></div>
@@ -820,9 +825,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     next: `<svg viewBox="0 0 64 64"><path d="M10 32 H46" stroke="#fff" stroke-width="9" stroke-linecap="round"/><path d="M34 14 L56 32 L34 50Z" fill="#fff" stroke="#fff" stroke-width="5" stroke-linejoin="round"/></svg>`,
     play: `<svg viewBox="0 0 64 64"><path d="M18 8 L56 32 L18 56Z" fill="#fff" stroke="#fff" stroke-width="6" stroke-linejoin="round"/></svg>`,
     star: `<svg viewBox="0 0 64 64"><path d="M32 4 L40 23 L60 24 L44 37 L50 58 L32 46 L14 58 L20 37 L4 24 L24 23Z" fill="#ffd23f" stroke="#f2a922" stroke-width="3" stroke-linejoin="round"/></svg>`,
-    hand: `<svg viewBox="0 0 60 84" xmlns="http://www.w3.org/2000/svg"><g fill="#ffe2c6" stroke="#c98a5a" stroke-width="3" stroke-linejoin="round">
-    <rect x="22" y="2" width="16" height="48" rx="8"/><path d="M8 44 q0 -9 8 -9 h4 v10 h-1 m19 -10 h4 q8 0 8 4 v4 q8 0 8 6 v14 q0 22 -24 22 h-4 q-22 0 -22 -22z"/>
-    <path d="M38 36 v8 M46 39 v7" fill="none"/></g><circle cx="30" cy="8" r="0" fill="none"/></svg>`
+    hand: `<svg viewBox="0 0 64 92" xmlns="http://www.w3.org/2000/svg"><g stroke="#b9794c" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="15" y="76" width="36" height="14" rx="5" fill="#8ec9ff" stroke="#5b9fdc"/>
+    <path d="M16 52 q-11 -4 -11 5 q0 6 9 13 l6 5" fill="#ffe2c6"/>
+    <path d="M17 44 h31 q10 0 10 10 v10 q0 14 -14 14 h-17 q-13 0 -13 -13 v-12 q0 -9 3 -9z" fill="#ffe2c6"/>
+    <rect x="47" y="45" width="12" height="17" rx="6" fill="#ffe2c6"/><rect x="36" y="41" width="13" height="18" rx="6.5" fill="#ffe2c6"/>
+    <rect x="22" y="2" width="16" height="54" rx="8" fill="#ffe2c6"/>
+    <path d="M25.5 9 q4.5 -4 9 0" fill="none" stroke="#e9b897" stroke-width="2"/></g>
+    <circle cx="44" cy="68" r="3.4" fill="#ffc2b0" stroke="none"/></svg>`
   };
 
   /* =========================================================
@@ -973,10 +983,64 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       }));
     }
   };
+  // こえ: GitHub Pages では voice/ の mp3（小春音アミ。ふみきり カンカン・もじもじの もり の声）を つかい、
+  // その声が ない セリフや、声の ファイルが ない ところ（claude.ai）では 端末の 読み上げ を つかう
+  var LINES = /*VOICE-LINES*/{
+    "tsunagete": "線路を、つなげてね！",
+    "loopstart": "ぐるっと一周、つなげてね！",
+    "connected": "つながったね！ 出発を、押してね！",
+    "choose": "下の線路を、えらんでね。",
+    "retry": "もう一回、やってみよう！",
+    "pressgo": "出発を、押してね！",
+    "remove": "ここの線路を、さわって取ってみよう。",
+    "here": "ここだよ！",
+    "shape": "この形を、置いてね。",
+    "go": "しゅっぱつ、しんこう！",
+    "stopped": "あれれ、止まっちゃった。ここを、つないでみよう！",
+    "clear": "できたね！ すごい！",
+    "loopclear": "一周できたね！ すごい！",
+    "allclear": "全部できたね！ おめでとう！"
+  } /*END-VOICE-LINES*/;
+  var VOICE = {
+    buf: {},
+    srcs: [],
+    tried: false
+  };
+  function loadVoices() {
+    if (VOICE.tried || !AC || !window.fetch || location.protocol === 'file:') return;
+    VOICE.tried = true;
+    fetch('voice/index.json').then(r => r.ok ? r.json() : null).then(m => {
+      if (!m || !m.clips) return;
+      Object.keys(m.clips).forEach(k => {
+        var files = [].concat(m.clips[k]),
+          bufs = [];
+        files.forEach((fn, i) => {
+          fetch('voice/' + fn).then(r => r.arrayBuffer()).then(ab => {
+            try {
+              AC.decodeAudioData(ab, b => {
+                bufs[i] = b;
+                if (files.every((_, j) => bufs[j])) VOICE.buf[k] = bufs;
+              }, () => {});
+            } catch (e) {}
+          }).catch(() => {});
+        });
+      });
+    }).catch(() => {});
+  }
   function pickVoice() {
     try {
-      var vs = speechSynthesis.getVoices();
-      jaVoice = vs.find(v => /^ja/i.test(v.lang)) || null;
+      var vs = speechSynthesis.getVoices().filter(v => /^ja/i.test(v.lang));
+      var pref = [/Google/, /Kyoko|O-?ren|Otoya/i, /Nanami|Ayumi|Haruka|Sayaka/i];
+      jaVoice = null;
+      var _loop3 = function _loop3() {
+        var re = _pref[_i4];
+        jaVoice = vs.find(v => re.test(v.name));
+        if (jaVoice) return 1; // break
+      };
+      for (var _i4 = 0, _pref = pref; _i4 < _pref.length; _i4++) {
+        if (_loop3()) break;
+      }
+      if (!jaVoice) jaVoice = vs[0] || null;
     } catch (e) {}
   }
   if ('speechSynthesis' in window) {
@@ -985,18 +1049,176 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       speechSynthesis.onvoiceschanged = pickVoice;
     } catch (e) {}
   }
-  function speak(text) {
-    if (state.muted || !state.audioOn || !('speechSynthesis' in window)) return;
+  function stopVoice() {
+    VOICE.srcs.forEach(s => {
+      try {
+        s.stop();
+      } catch (e) {}
+    });
+    VOICE.srcs = [];
     try {
-      speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(text);
-      u.lang = 'ja-JP';
-      if (jaVoice) u.voice = jaVoice;
-      u.rate = 1;
-      u.pitch = 1.25;
-      speechSynthesis.speak(u);
+      if ('speechSynthesis' in window) speechSynthesis.cancel();
     } catch (e) {}
   }
+  function speak(id) {
+    if (state.muted || !state.audioOn) return;
+    stopVoice();
+    var bufs = VOICE.buf[id];
+    if (bufs && AC) {
+      try {
+        // いくつかの こえを つづけて ながす
+        var t = AC.currentTime + .02,
+          last = null;
+        bufs.forEach(b => {
+          var src = AC.createBufferSource();
+          src.buffer = b;
+          src.connect(AC.destination);
+          src.start(t);
+          t += b.duration + .08;
+          last = src;
+          VOICE.srcs.push(src);
+        });
+        bgmDuck(t - AC.currentTime + .3);
+        return;
+      } catch (e) {}
+    }
+    if (!('speechSynthesis' in window)) return;
+    try {
+      var u = new SpeechSynthesisUtterance(LINES[id] || id);
+      u.lang = 'ja-JP';
+      if (jaVoice) u.voice = jaVoice;
+      u.rate = 1.05;
+      u.pitch = 1.15;
+      speechSynthesis.speak(u);
+      bgmDuck(2.4);
+    } catch (e) {}
+  }
+
+  // BGM: その場で つくる オルゴールふうの きょく（8しょうせつを くりかえす）
+  var BGM = {
+    on: false,
+    timer: 0,
+    t0: 0,
+    i: 0,
+    gain: null,
+    events: null
+  };
+  var BPM = 100,
+    SPB = 60 / BPM,
+    LOOP = 32;
+  (function () {
+    var mel = [[72, 1], [76, 1], [79, 1], [76, 1], [77, 1], [81, 1], [79, 2], [76, 1], [79, 1], [84, 1], [79, 1], [81, 1], [79, .5], [77, .5], [76, 2], [74, 1], [77, 1], [81, 1], [77, 1], [79, 1], [77, .5], [76, .5], [74, 2], [76, 1], [79, 1], [77, 1], [74, 1], [72, 3], [0, 1]];
+    var roots = [48, 53, 48, 53, 50, 43, 48, 48],
+      ev = [];
+    var b = 0;
+    mel.forEach(n => {
+      if (n[0]) ev.push({
+        b,
+        m: n[0],
+        d: n[1],
+        kind: 'mel'
+      });
+      b += n[1];
+    });
+    roots.forEach((r, i) => {
+      ev.push({
+        b: i * 4,
+        m: r,
+        d: 1.6,
+        kind: 'bass'
+      });
+      ev.push({
+        b: i * 4 + 2,
+        m: r + 7,
+        d: 1.6,
+        kind: 'bass'
+      });
+    });
+    ev.sort((a, c) => a.b - c.b);
+    BGM.events = ev;
+  })();
+  var mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+  function bgmNote(e, t) {
+    var f = mtof(e.m),
+      d = e.d * SPB;
+    var parts = e.kind === 'mel' ? [[1, 'sine', .07], [2, 'sine', .018]] : [[1, 'triangle', .06]];
+    parts.forEach(p => {
+      var o = AC.createOscillator(),
+        g = AC.createGain();
+      o.type = p[1];
+      o.frequency.value = f * p[0];
+      var len = e.kind === 'mel' ? Math.min(d + .4, 1.2) : d;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(p[2], t + .015);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+      o.connect(g);
+      g.connect(BGM.gain);
+      o.start(t);
+      o.stop(t + len + .05);
+    });
+  }
+  function bgmTick() {
+    if (!BGM.on || !AC) return;
+    var ahead = AC.currentTime + .5;
+    for (var guard = 0; guard < 64; guard++) {
+      var e = BGM.events[BGM.i],
+        t = BGM.t0 + e.b * SPB;
+      if (t > ahead) break;
+      if (t > AC.currentTime - .05) bgmNote(e, t);
+      BGM.i++;
+      if (BGM.i >= BGM.events.length) {
+        BGM.i = 0;
+        BGM.t0 += LOOP * SPB;
+      }
+    }
+  }
+  function bgmStart() {
+    if (BGM.on || state.muted || !AC || document.hidden) return;
+    try {
+      if (!BGM.gain) {
+        BGM.gain = AC.createGain();
+        BGM.gain.gain.value = 1;
+        BGM.gain.connect(AC.destination);
+      }
+      BGM.on = true;
+      BGM.i = 0;
+      BGM.t0 = AC.currentTime + .15;
+      BGM.timer = setInterval(bgmTick, 120);
+      bgmTick();
+    } catch (e) {
+      BGM.on = false;
+    }
+  }
+  function bgmStop() {
+    BGM.on = false;
+    clearInterval(BGM.timer);
+    if (BGM.gain && AC) {
+      try {
+        var g = BGM.gain;
+        g.gain.setValueAtTime(g.gain.value, AC.currentTime);
+        g.gain.linearRampToValueAtTime(0.0001, AC.currentTime + .15);
+        setTimeout(() => {
+          g.disconnect();
+        }, 300);
+      } catch (e) {}
+      BGM.gain = null;
+    }
+  }
+  function bgmDuck(sec) {
+    if (!BGM.gain || !AC) return;
+    try {
+      var g = BGM.gain.gain,
+        t = AC.currentTime;
+      g.cancelScheduledValues(t);
+      g.setValueAtTime(g.value, t);
+      g.linearRampToValueAtTime(.3, t + .1);
+      g.setValueAtTime(.3, t + sec);
+      g.linearRampToValueAtTime(1, t + sec + .6);
+    } catch (e) {}
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) bgmStop();else if (state.audioOn) bgmStart();
+  });
 
   /* =========================================================
      じょうたい
@@ -1077,7 +1299,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     show('game');
     renderAll();
     var msg = cur().loop ? 'ぐるっと いっしゅう つなげてね' : 'せんろを つなげてね';
-    speak(msg);
+    speak(cur().loop ? 'loopstart' : 'tsunagete');
     showBubble(msg, ICON.hand, 2800);
   }
   function renderAll() {
@@ -1217,7 +1439,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     var ok = updateButtons();
     if (ok && !state.wasComplete) {
       sfx.connect();
-      speak('つながったね！ しゅっぱつ を おしてね');
+      speak('connected');
     }
     state.wasComplete = ok;
     updateGuide();
@@ -1253,7 +1475,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         sfx.boop();
         nudgeTray();
         showBubble('したの せんろを えらんでね', ICON.hand, 2200);
-        speak('したの せんろを えらんでね');
+        speak('choose');
         return;
       }
       placeAt(k, state.selected);
@@ -1295,7 +1517,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     state.selected = null;
     sfx.remove();
     afterChange();
-    speak('もういちど やってみよう');
+    speak('retry');
   }
   function hintTarget() {
     var st = cur(),
@@ -1328,7 +1550,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       };
       renderHL();
       sfx.soft();
-      speak('しゅっぱつ を おしてね');
+      speak('pressgo');
       showBubble('しゅっぱつ を おしてね', ICON.hint, 2400);
       return;
     }
@@ -1340,13 +1562,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     });
     sfx.soft();
     if (t.wrong) {
-      speak('ここの せんろを タッチして とってみよう');
+      speak('remove');
       showBubble('ここを タッチして とってみよう', ICON.hint, 2600);
     } else if (level === 1) {
-      speak('ここだよ');
+      speak('here');
       showBubble('ここだよ', ICON.hint, 2000);
     } else {
-      speak('この かたちを おいてね');
+      speak('shape');
       showBubble('この かたちを おいてね', ICON.hint, 2400);
     }
     renderHL();
@@ -1372,7 +1594,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       T = dist < 1 ? 0.6 : dist / (st.loop ? 145 : 120) + 1.0;
     sfx.whistle();
     setTimeout(() => {
-      if (token === state.runToken) speak('しゅっぱつ！');
+      if (token === state.runToken) speak('go');
     }, 350);
     var t0 = null,
       lastChug = 0;
@@ -1419,7 +1641,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     setTimeout(() => {
       if (token !== state.runToken) return;
       sfx.soft();
-      speak('あれれ、とまっちゃった。ここを つないでみよう');
+      speak('stopped');
       showBubble('ここを つないでみよう', ICON.hint, 3200);
     }, 450);
   }
@@ -1433,7 +1655,8 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     renderHUD();
     updateGuide();
     sfx.arrive();
-    speak(cur().loop ? 'いっしゅう できたね！' : 'できたね！');
+    speak(cur().loop ? 'loopclear' : 'clear');
+    bgmDuck(2.5);
     $('#board').classList.add('cheer');
     sparkles();
     confetti(70);
@@ -1490,7 +1713,8 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     $('#final .parade').innerHTML = trainSide('hankyu').replace('<svg', '<svg style="animation-delay:0s"') + trainSide('yamanote').replace('<svg', '<svg style="animation-delay:-3.5s"');
     $('#btnTop').innerHTML = ICON.home.replace(/#ff8a5c/g, '#fff').replace(/#ffd9c4/g, '#bdf0c9') + 'はじめから';
     sfx.fanfare();
-    speak('ぜんぶ できたね！ おめでとう！');
+    speak('allclear');
+    bgmDuck(3);
     confetti(110);
     setTimeout(() => {
       if (state.screen === 'final') confetti(80);
@@ -1533,19 +1757,24 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       var b = target.getBoundingClientRect();
       pos = [b.left + b.width / 2, b.top + b.height / 2];
     } else if (cell) pos = cellScreenCenter(cell);
+    var ripple = $('#ripple');
     if (!pos) {
       hand.classList.remove('on');
+      ripple.classList.remove('on');
       return;
     }
-    hand.innerHTML = ICON.hand;
+    if (!hand.firstChild) hand.innerHTML = ICON.hand;
     hand.classList.add('on');
+    ripple.classList.add('on');
+    // ゆびさきを めあての まんなかに あわせる。下の ほうの ものは 上から さす
     var w = hand.offsetWidth,
-      h = w * 84 / 60;
-    var flip = pos[1] + h + 20 > innerHeight;
-    hand.style.transform = flip ? 'rotate(180deg)' : 'none';
-    hand.style.left = pos[0] - w / 2 + 'px';
-    hand.style.top = (flip ? pos[1] - 4 : pos[1] + 4) + 'px';
-    hand.style.transformOrigin = '50% 0';
+      h = w * 92 / 64;
+    var fromTop = pos[1] > innerHeight * 0.62;
+    hand.style.transform = fromTop ? 'rotate(200deg)' : 'rotate(-18deg)';
+    hand.style.left = pos[0] - w * 0.47 + 'px';
+    hand.style.top = pos[1] - h * 0.025 + 'px';
+    ripple.style.left = pos[0] + 'px';
+    ripple.style.top = pos[1] + 'px';
   }
 
   /* =========================================================
@@ -1610,6 +1839,8 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   var unlockOnce = () => {
     unlockAudio();
     state.audioOn = true;
+    loadVoices();
+    bgmStart();
   };
   ['pointerdown', 'touchstart', 'touchend', 'mousedown'].forEach(ev => document.addEventListener(ev, unlockOnce, true));
   ['contextmenu', 'selectstart', 'dragstart', 'gesturestart'].forEach(ev => document.addEventListener(ev, e => e.preventDefault()));
@@ -1700,9 +1931,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     state.runToken++;
     state.running = false;
     $('#clear').classList.remove('on');
-    try {
-      speechSynthesis.cancel();
-    } catch (e) {}
+    stopVoice();
     show('title');
   });
   $('#btnTop').addEventListener('click', () => show('title'));
@@ -1710,10 +1939,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     state.muted = !state.muted;
     store.set('muted', state.muted);
     if (state.muted) {
-      try {
-        speechSynthesis.cancel();
-      } catch (e) {}
-    } else sfx.select();
+      stopVoice();
+      bgmStop();
+    } else {
+      sfx.select();
+      bgmStart();
+    }
     renderHUD();
   });
   $('#btnTrain').addEventListener('click', () => {
@@ -1753,6 +1984,8 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
   // テストよう
   window.__senro = {
+    BGM,
+    VOICE,
     STAGES,
     PIECES,
     trace,

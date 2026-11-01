@@ -1,0 +1,28 @@
+{
+ "credit": "Style-Bert-VITS2 モデル「小春音アミ」、あみたろの声素材工房 (https://amitaro.net/)。ふみきり カンカン・もじもじの もり で作った声を使っています。",
+ "clips": {
+  "go": [
+   "30312d7ba862.mp3"
+  ],
+  "pressgo": [
+   "5cb986ef8eaf.mp3"
+  ],
+  "connected": [
+   "f31c7c422a79.mp3",
+   "5cb986ef8eaf.mp3"
+  ],
+  "here": [
+   "0c05a8b414f1.mp3"
+  ],
+  "clear": [
+   "5be83e35ee3f.mp3"
+  ],
+  "loopclear": [
+   "de0ef6de7d7e.mp3",
+   "5be83e35ee3f.mp3"
+  ],
+  "allclear": [
+   "902bcfa7a1b8.mp3"
+  ]
+ }
+}
