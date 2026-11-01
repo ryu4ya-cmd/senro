@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- せんろを つなごう！ のアイコン（tools/make_icons.js で png にする） -->
+  <rect width="512" height="512" fill="#cdeeb4"/>
+  <rect x="24" y="24" width="464" height="464" rx="56" fill="#d8f3c4"/>
+  <!-- まっすぐな せんろ -->
+  <rect x="0" y="181" width="512" height="150" fill="#e7d4b4"/>
+  <g fill="#ad7f5a">
+    <rect x="16" y="168" width="30" height="176" rx="8"/><rect x="86" y="168" width="30" height="176" rx="8"/><rect x="156" y="168" width="30" height="176" rx="8"/>
+    <rect x="226" y="168" width="30" height="176" rx="8"/><rect x="296" y="168" width="30" height="176" rx="8"/><rect x="366" y="168" width="30" height="176" rx="8"/><rect x="436" y="168" width="30" height="176" rx="8"/>
+  </g>
+  <g stroke="#7a8295" stroke-width="18"><line x1="0" y1="218" x2="512" y2="218"/><line x1="0" y1="294" x2="512" y2="294"/></g>
+  <g stroke="#e2e6ee" stroke-width="5"><line x1="0" y1="218" x2="512" y2="218"/><line x1="0" y1="294" x2="512" y2="294"/></g>
+  <!-- マルーンの でんしゃ（うえから） -->
+  <g transform="translate(250 256)">
+    <rect x="-200" y="-70" width="190" height="140" rx="34" fill="#7a1d2c" stroke="#4e0f1b" stroke-width="10"/>
+    <rect x="-182" y="-46" width="154" height="92" rx="22" fill="#f0e3c6"/>
+    <rect x="0" y="-70" width="210" height="140" rx="34" fill="#7a1d2c" stroke="#4e0f1b" stroke-width="10"/>
+    <rect x="18" y="-46" width="150" height="92" rx="22" fill="#f0e3c6"/>
+    <path d="M170 -58 Q206 0 170 58" stroke="#2f3a46" stroke-width="16" fill="none"/>
+    <circle cx="190" cy="-44" r="11" fill="#fff3a0"/><circle cx="190" cy="44" r="11" fill="#fff3a0"/>
+    <path d="M70 -36 L98 0 L70 36 M126 -36 L98 0 L126 36" stroke="#555" stroke-width="7" fill="none"/>
+  </g>
+  <!-- うさぎ -->
+  <g transform="translate(400 470) scale(2.6)">
+    <ellipse cx="-6" cy="-45" rx="5" ry="13" fill="#fff" stroke="#d8ccc4" stroke-width="2"/><ellipse cx="-6" cy="-45" rx="2.2" ry="8.5" fill="#ffc2d1"/>
+    <ellipse cx="6" cy="-45" rx="5" ry="13" fill="#fff" stroke="#d8ccc4" stroke-width="2"/><ellipse cx="6" cy="-45" rx="2.2" ry="8.5" fill="#ffc2d1"/>
+    <ellipse cx="0" cy="-10" rx="11" ry="10" fill="#fff" stroke="#d8ccc4" stroke-width="2"/><circle cx="0" cy="-27" r="13" fill="#fff" stroke="#d8ccc4" stroke-width="2"/>
+    <circle cx="-4.5" cy="-28" r="2" fill="#4a3a30"/><circle cx="4.5" cy="-28" r="2" fill="#4a3a30"/><circle cx="-8.5" cy="-23" r="2.8" fill="#ffc2d1"/><circle cx="8.5" cy="-23" r="2.8" fill="#ffc2d1"/>
+  </g>
+</svg>

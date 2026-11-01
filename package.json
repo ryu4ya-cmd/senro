@@ -1,0 +1,12 @@
+{
+  "name": "senro",
+  "private": true,
+  "description": "せんろを つなごう！（幼児向けの線路パズル）",
+  "scripts": {
+    "build": "node tools/build.js"
+  },
+  "devDependencies": {
+    "@babel/core": "7.24.7",
+    "@babel/preset-env": "7.24.7"
+  }
+}
